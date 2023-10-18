@@ -29,6 +29,7 @@ import (
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/registry"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -79,7 +80,10 @@ func locateChartFile(dirPath string) (string, error) {
 
 func helmChartFromContainerRegistry(version string, config *helm.Configuration, repoUrl string, releaseName string) (*chart.Chart, error) {
 	pull := helm.NewPull()
-	pull.RepoURL = repoUrl
+
+	if !registry.IsOCI(repoUrl) {
+		pull.RepoURL = repoUrl
+	}
 	pull.Settings = &cli.EnvSettings{}
 	pullopt := helm.WithConfig(config)
 	pullopt(pull)
@@ -101,7 +105,11 @@ func helmChartFromContainerRegistry(version string, config *helm.Configuration, 
 
 	pull.DestDir = dir
 
-	_, err = pull.Run(releaseName)
+	chartRef := releaseName
+	if registry.IsOCI(repoUrl) {
+		chartRef = fmt.Sprintf("%s/%s", repoUrl, releaseName)
+	}
+	_, err = pull.Run(chartRef)
 	if err != nil {
 		return nil, err
 	}
