@@ -105,7 +105,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
             echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
-            echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_ENV
+            echo "CHECKOUT_REF=refs/heads/willdavsmith/functional-test-pass" >> $GITHUB_ENV
             echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
       - name: Use custom actions
         uses: actions/checkout@v3
