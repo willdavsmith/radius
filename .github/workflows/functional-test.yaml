@@ -16,6 +16,7 @@
 
 name: Functional tests
 on:
+  workflow_dispatch:
   schedule:
     # Run every 4 hours on weekdays.
     - cron: "30 0,4,8,12,16,20 * * 1-5"
