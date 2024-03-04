@@ -79,7 +79,6 @@ jobs:
     env:
       DE_IMAGE: 'ghcr.io/radius-project/deployment-engine'
       DE_TAG: 'latest'
-      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     outputs:
       REL_VERSION: ${{ steps.gen-id.outputs.REL_VERSION }}
       UNIQUE_ID: ${{ steps.gen-id.outputs.UNIQUE_ID }}
@@ -324,7 +323,6 @@ jobs:
       BICEP_RECIPE_TAG_VERSION: ${{ needs.build.outputs.REL_VERSION }}
       DE_IMAGE: ${{ needs.build.outputs.DE_IMAGE }}
       DE_TAG: ${{ needs.build.outputs.DE_TAG }}
-      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     outputs:
       test_status: ${{ steps.report_test_status.outputs.test_status }}
     steps:
@@ -646,7 +644,6 @@ jobs:
     if: always()
     env:
       CHECKOUT_REF: ${{ needs.build.outputs.CHECKOUT_REF }}
-      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     steps:
       - name: Login as the GitHub App
         uses: tibdex/github-app-token@v1
