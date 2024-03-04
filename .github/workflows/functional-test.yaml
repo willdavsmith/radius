@@ -79,7 +79,7 @@ jobs:
     env:
       DE_IMAGE: 'ghcr.io/radius-project/deployment-engine'
       DE_TAG: 'latest'
-      FUNCTIONAL_TEST_APP_ID: 425843
+      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     outputs:
       REL_VERSION: ${{ steps.gen-id.outputs.REL_VERSION }}
       UNIQUE_ID: ${{ steps.gen-id.outputs.UNIQUE_ID }}
@@ -94,7 +94,7 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with: 
-          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - name: Set up checkout target (scheduled)
         if: github.event_name == 'schedule'
@@ -324,7 +324,7 @@ jobs:
       BICEP_RECIPE_TAG_VERSION: ${{ needs.build.outputs.REL_VERSION }}
       DE_IMAGE: ${{ needs.build.outputs.DE_IMAGE }}
       DE_TAG: ${{ needs.build.outputs.DE_TAG }}
-      FUNCTIONAL_TEST_APP_ID: 425843
+      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     outputs:
       test_status: ${{ steps.report_test_status.outputs.test_status }}
     steps:
@@ -332,7 +332,7 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with: 
-          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
@@ -646,13 +646,13 @@ jobs:
     if: always()
     env:
       CHECKOUT_REF: ${{ needs.build.outputs.CHECKOUT_REF }}
-      FUNCTIONAL_TEST_APP_ID: 425843
+      FUNCTIONAL_TEST_APP_ID: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
     steps:
       - name: Login as the GitHub App
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with:
-          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
