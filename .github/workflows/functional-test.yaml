@@ -52,9 +52,9 @@ env:
   # Azure workload identity webhook chart version
   AZURE_WORKLOAD_IDENTITY_WEBHOOK_VER: '1.1.0'
   # Container registry for storing container images
-  CONTAINER_REGISTRY: ghcr.io/radius-project/dev
+  CONTAINER_REGISTRY: ghcr.io/willdavsmith/radius
   # Container registry for storing Bicep recipe artifacts
-  BICEP_RECIPE_REGISTRY: ghcr.io/radius-project/dev
+  BICEP_RECIPE_REGISTRY: ghcr.io/willdavsmith/radius
   # The radius functional test timeout
   FUNCTIONALTEST_TIMEOUT: 60m
   # The Azure Location to store test resources
