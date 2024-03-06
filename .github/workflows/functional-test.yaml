@@ -439,6 +439,7 @@ jobs:
           go install gotest.tools/gotestsum@v${{ env.GOTESTSUM_VER }}
       - name: Install Radius
         run: |
+          docker logout ghcr.io
           export PATH=$GITHUB_WORKSPACE/bin:$PATH
           which rad || { echo "cannot find rad"; exit 1; }
 
