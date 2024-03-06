@@ -322,21 +322,6 @@ jobs:
     outputs:
       test_status: ${{ steps.report_test_status.outputs.test_status }}
     steps:
-      - name: Get GitHub App token
-        uses: tibdex/github-app-token@v1
-        id: get_installation_token
-        with: 
-          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
-          private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
-      - uses: LouisBrunner/checks-action@v1.6.1
-        if: always()
-        with:
-          token: ${{ steps.get_installation_token.outputs.token }}
-          name: 'Functional Test Run'
-          status: in_progress
-          repo: ${{ github.repository }}
-          sha: ${{ env.CHECKOUT_REF }}
-          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -375,15 +360,6 @@ jobs:
         uses: azure/login@v1
         with:
           creds: '{"clientId":"${{ secrets.INTEGRATION_TEST_SP_APP_ID }}","clientSecret":"${{ secrets.INTEGRATION_TEST_SP_PASSWORD }}","subscriptionId":"${{ secrets.INTEGRATION_TEST_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.INTEGRATION_TEST_TENANT_ID }}"}'
-      - uses: marocchino/sticky-pull-request-comment@v2
-        continue-on-error: true
-        with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
-          header: teststatus-${{ github.run_id }}
-          number: ${{ env.PR_NUMBER }}
-          append: true
-          message: |
-            :hourglass: Starting ${{ matrix.name }} functional tests...
       - name: Create azure resource group - ${{ env.AZURE_TEST_RESOURCE_GROUP }}
         run: |
           current_time=$(date +%s)
@@ -461,19 +437,8 @@ jobs:
       - name: Install gotestsum (test reporting tool)
         run: |
           go install gotest.tools/gotestsum@v${{ env.GOTESTSUM_VER }}
-      - uses: marocchino/sticky-pull-request-comment@v2
-        if: failure() && env.PR_NUMBER != ''
-        continue-on-error: true
-        with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
-          header: teststatus-${{ github.run_id }}
-          number: ${{ env.PR_NUMBER }}
-          append: true
-          message: |
-            :x: Test tool installation for ${{ matrix.name }} failed. Please check [the logs](${{ env.ACTION_LINK }}) for more details
       - name: Install Radius
         run: |
-          export GITHUB_TOKEN=${{ steps.get_installation_token.outputs.token }}
           export PATH=$GITHUB_WORKSPACE/bin:$PATH
           which rad || { echo "cannot find rad"; exit 1; }
 
@@ -507,16 +472,6 @@ jobs:
         run: |
           kubectl get pods -A
           kubectl describe pods -A
-      - uses: marocchino/sticky-pull-request-comment@v2
-        if: failure() && env.PR_NUMBER != ''
-        continue-on-error: true
-        with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
-          header: teststatus-${{ github.run_id }}
-          number: ${{ env.PR_NUMBER }}
-          append: true
-          message: |
-            :x: Failed to install Radius for ${{ matrix.name }} functional test. Please check [the logs](${{ env.ACTION_LINK }}) for more details
       - name: Publish Terraform test recipes
         run: |
           make publish-test-terraform-recipes
