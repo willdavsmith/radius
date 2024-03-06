@@ -112,7 +112,7 @@ jobs:
         if: github.event_name == 'workflow_run'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_RAD_CI_BOT_PAT }}
           script: |
             const payload = context.payload.workflow_run;
             let fs = require('fs');
@@ -168,7 +168,7 @@ jobs:
         if: env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           hide: true
@@ -208,12 +208,12 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_RAD_CI_BOT_PAT }}
       - uses: marocchino/sticky-pull-request-comment@v2
         if: env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -235,7 +235,7 @@ jobs:
         if: success() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -245,7 +245,7 @@ jobs:
         if: failure() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -255,7 +255,7 @@ jobs:
         if: env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -278,7 +278,7 @@ jobs:
         if: success() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -288,7 +288,7 @@ jobs:
         if: failure() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -442,7 +442,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_RAD_CI_BOT_PAT }}
       - name: Install Radius
         run: |
           export PATH=$GITHUB_WORKSPACE/bin:$PATH
@@ -558,7 +558,7 @@ jobs:
         if: success() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -568,7 +568,7 @@ jobs:
         if: failure() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
@@ -578,7 +578,7 @@ jobs:
         if: cancelled() && env.PR_NUMBER != ''
         continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          GH_RAD_CI_BOT_PAT: ${{ steps.get_installation_token.outputs.token }}
           header: teststatus-${{ github.run_id }}
           number: ${{ env.PR_NUMBER }}
           append: true
