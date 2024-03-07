@@ -95,7 +95,7 @@ jobs:
         if: github.event_name == 'schedule'
         run: |
           echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
-          echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_ENV
+          echo "CHECKOUT_REF=refs/heads/main" >> $GITHUB_ENV
       - name: Set up checkout target (pull_request)
         if: github.event_name == 'pull_request'
         run: |
