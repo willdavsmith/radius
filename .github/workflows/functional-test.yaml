@@ -50,10 +50,6 @@ env:
   AZURE_KEYVAULT_CSI_DRIVER_VER: '1.4.2'
   # Azure workload identity webhook chart version
   AZURE_WORKLOAD_IDENTITY_WEBHOOK_VER: '1.1.0'
-  # Container registry for storing container images
-  CONTAINER_REGISTRY: ghcr.io/radius-project/dev
-  # Container registry for storing Bicep recipe artifacts
-  BICEP_RECIPE_REGISTRY: ghcr.io/radius-project/dev
   # The radius functional test timeout
   FUNCTIONALTEST_TIMEOUT: 60m
   # The Azure Location to store test resources
@@ -79,7 +75,6 @@ jobs:
     env:
       DE_IMAGE: 'ghcr.io/radius-project/deployment-engine'
       DE_TAG: 'latest'
-      FUNCTIONAL_TEST_APP_ID: 425843
     outputs:
       REL_VERSION: ${{ steps.gen-id.outputs.REL_VERSION }}
       UNIQUE_ID: ${{ steps.gen-id.outputs.UNIQUE_ID }}
@@ -324,7 +319,8 @@ jobs:
       BICEP_RECIPE_TAG_VERSION: ${{ needs.build.outputs.REL_VERSION }}
       DE_IMAGE: ${{ needs.build.outputs.DE_IMAGE }}
       DE_TAG: ${{ needs.build.outputs.DE_TAG }}
-      FUNCTIONAL_TEST_APP_ID: 425843
+    outputs:
+      test_status: ${{ steps.report_test_status.outputs.test_status }}
     steps:
       - name: Login as the GitHub App
         uses: tibdex/github-app-token@v1
@@ -628,6 +624,23 @@ jobs:
           append: true
           message: |
             :x: ${{ matrix.name }} functional test cancelled. Please check [the logs](${{ env.ACTION_LINK }}) for more details
+      - id: report_test_status
+        if: always()
+        run: |
+          if ${{ env.test_status }} == 'failure' || ${{ job.status }} == 'failure' || ${{ job.status }} == 'cancelled'; then
+            echo "test_status=failure" >> $GITHUB_OUTPUT
+            echo "test_status=failure" >> $GITHUB_ENV
+          else
+            echo "test_status=success" >> $GITHUB_OUTPUT
+          fi
+  report-test-results:
+    name: Report test results
+    needs: [build, tests]
+    runs-on: ubuntu-latest
+    if: always()
+    env:
+      CHECKOUT_REF: ${{ needs.build.outputs.CHECKOUT_REF }}
+    steps:
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
         with:
@@ -636,7 +649,7 @@ jobs:
           repo: ${{ github.repository }}
           sha: ${{ env.CHECKOUT_REF }}
           status: completed
-          conclusion: ${{ job.status }}
+          conclusion: ${{ needs.tests.outputs.test_status }}
           output: |
             {"summary":"Functional Test run completed. See links for more information.","title":"Functional Test Run"}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
