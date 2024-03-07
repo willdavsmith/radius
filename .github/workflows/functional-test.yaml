@@ -67,8 +67,8 @@ env:
   # Server where terraform test modules are deployed
   TF_RECIPE_MODULE_SERVER_URL: "http://tf-module-server.radius-test-tf-module-server.svc.cluster.local"
 
-  BICEP_RECIPE_REGISTRY: ghcr.io/willdavsmith/radius
-  CONTAINER_REGISTRY: ghcr.io/willdavsmith/radius
+  BICEP_RECIPE_REGISTRY: "ghcr.io/willdavsmith/radius"
+  CONTAINER_REGISTRY: "ghcr.io/willdavsmith/radius"
   FUNCTIONAL_TEST_APP_ID: 811142
   IMAGE_SRC: "https://github.com/willdavsmith/radius"
 
@@ -80,7 +80,6 @@ jobs:
     env:
       DE_IMAGE: 'ghcr.io/radius-project/deployment-engine'
       DE_TAG: 'latest'
-      FUNCTIONAL_TEST_APP_ID: 425843
     outputs:
       REL_VERSION: ${{ steps.gen-id.outputs.REL_VERSION }}
       UNIQUE_ID: ${{ steps.gen-id.outputs.UNIQUE_ID }}
@@ -319,7 +318,6 @@ jobs:
       BICEP_RECIPE_TAG_VERSION: ${{ needs.build.outputs.REL_VERSION }}
       DE_IMAGE: ${{ needs.build.outputs.DE_IMAGE }}
       DE_TAG: ${{ needs.build.outputs.DE_TAG }}
-      FUNCTIONAL_TEST_APP_ID: 425843
     steps:
       - name: Login as the GitHub App
         uses: tibdex/github-app-token@v1
