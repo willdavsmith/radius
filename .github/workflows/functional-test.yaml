@@ -322,12 +322,6 @@ jobs:
     outputs:
       test_status: ${{ steps.report_test_status.outputs.test_status }}
     steps:
-      - name: Login as the GitHub App
-        uses: tibdex/github-app-token@v1
-        id: get_installation_token
-        with: 
-          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
-          private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
         with:
