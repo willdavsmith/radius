@@ -16,6 +16,11 @@
 
 name: Functional tests
 on:
+  schedule:
+    # Run every 4 hours on weekdays.
+    - cron: "30 0,4,8,12,16,20 * * 1-5"
+    # Run every 12 hours on weekends.
+    - cron: "30 0,12 * * 0,6"
   workflow_dispatch:
   # Dispatch on external events
   repository_dispatch:
@@ -50,6 +55,8 @@ env:
   CONTAINER_REGISTRY: ghcr.io/willdavsmith/radius
   # Container registry for storing Bicep recipe artifacts
   BICEP_RECIPE_REGISTRY: ghcr.io/willdavsmith/radius
+  # GitHub App ID for functional test
+  FUNCTIONAL_TEST_APP_ID: 425843
   # The radius functional test timeout
   FUNCTIONALTEST_TIMEOUT: 60m
   # The Azure Location to store test resources
@@ -71,7 +78,7 @@ jobs:
   build:
     name: Build Radius for test
     runs-on: ubuntu-latest
-    if: github.event_name == 'repository_dispatch' || (github.event_name == 'schedule' && github.repository == 'willdavsmith/radius') || github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'repository_dispatch' || (github.event_name == 'schedule' && github.repository == 'willdavsmith/radius') || github.event_name == 'workflow_run'
     env:
       DE_IMAGE: 'ghcr.io/radius-project/deployment-engine'
       DE_TAG: 'latest'
@@ -89,7 +96,7 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with: 
-          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - name: Set up checkout target (scheduled)
         if: github.event_name == 'schedule'
@@ -297,7 +304,7 @@ jobs:
   tests:
     name: Run ${{ matrix.name }} functional tests
     needs: build
-    if: github.event_name == 'repository_dispatch' || (github.event_name == 'schedule' && github.repository == 'willdavsmith/radius') || github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'repository_dispatch' || (github.event_name == 'schedule' && github.repository == 'willdavsmith/radius') || github.event_name == 'workflow_run'
     strategy:
       fail-fast: true
       matrix:
@@ -326,8 +333,17 @@ jobs:
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with: 
-          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
+      - uses: LouisBrunner/checks-action@v1.6.1
+        if: always()
+        with:
+          token: ${{ steps.get_installation_token.outputs.token }}
+          name: 'Functional Test Run'
+          status: in_progress
+          repo: ${{ github.repository }}
+          sha: ${{ env.CHECKOUT_REF }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -338,6 +354,7 @@ jobs:
         if: matrix.name == 'samples'
         with:
           repository: radius-project/samples
+          token: ${{ secrets.GH_RAD_CI_BOT_PAT }}
           ref: refs/heads/edge
           path: samples
       - name: Set up Go ${{ env.GOVER }}
@@ -366,6 +383,15 @@ jobs:
         uses: azure/login@v1
         with:
           creds: '{"clientId":"${{ secrets.INTEGRATION_TEST_SP_APP_ID }}","clientSecret":"${{ secrets.INTEGRATION_TEST_SP_PASSWORD }}","subscriptionId":"${{ secrets.INTEGRATION_TEST_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.INTEGRATION_TEST_TENANT_ID }}"}'
+      - uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
+        with:
+          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          header: teststatus-${{ github.run_id }}
+          number: ${{ env.PR_NUMBER }}
+          append: true
+          message: |
+            :hourglass: Starting ${{ matrix.name }} functional tests...
       - name: Create azure resource group - ${{ env.AZURE_TEST_RESOURCE_GROUP }}
         run: |
           current_time=$(date +%s)
@@ -433,6 +459,12 @@ jobs:
         run: |
           helm repo add azure-workload-identity https://azure.github.io/azure-workload-identity/charts
           helm install workload-identity-webhook azure-workload-identity/workload-identity-webhook --namespace radius-default --create-namespace --version ${{ env.AZURE_WORKLOAD_IDENTITY_WEBHOOK_VER }} --set azureTenantID=${{ secrets.INTEGRATION_TEST_TENANT_ID }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download Bicep
         run: |
           chmod +x ./bin/rad
@@ -443,12 +475,16 @@ jobs:
       - name: Install gotestsum (test reporting tool)
         run: |
           go install gotest.tools/gotestsum@v${{ env.GOTESTSUM_VER }}
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: failure() && env.PR_NUMBER != ''
+        continue-on-error: true
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          header: teststatus-${{ github.run_id }}
+          number: ${{ env.PR_NUMBER }}
+          append: true
+          message: |
+            :x: Test tool installation for ${{ matrix.name }} failed. Please check [the logs](${{ env.ACTION_LINK }}) for more details
       - name: Install Radius
         run: |
           export PATH=$GITHUB_WORKSPACE/bin:$PATH
@@ -479,11 +515,16 @@ jobs:
           rad env update kind-radius --aws-region ${{ env.AWS_REGION }} --aws-account-id ${{ secrets.FUNCTEST_AWS_ACCOUNT_ID }}
           rad credential register aws \
             --access-key-id ${{ secrets.FUNCTEST_AWS_ACCESS_KEY_ID }} --secret-access-key ${{ secrets.FUNCTEST_AWS_SECRET_ACCESS_KEY }}
-      - name: log
-        if: always()
-        run: |
-          kubectl get pods -A
-          kubectl describe pods -A
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: failure() && env.PR_NUMBER != ''
+        continue-on-error: true
+        with:
+          GITHUB_TOKEN: ${{ steps.get_installation_token.outputs.token }}
+          header: teststatus-${{ github.run_id }}
+          number: ${{ env.PR_NUMBER }}
+          append: true
+          message: |
+            :x: Failed to install Radius for ${{ matrix.name }} functional test. Please check [the logs](${{ env.ACTION_LINK }}) for more details
       - name: Publish Terraform test recipes
         run: |
           make publish-test-terraform-recipes
@@ -607,11 +648,11 @@ jobs:
     env:
       CHECKOUT_REF: ${{ needs.build.outputs.CHECKOUT_REF }}
     steps:
-      - name: Get GitHub App token
+      - name: Login as the GitHub App
         uses: tibdex/github-app-token@v1
         id: get_installation_token
         with:
-          app_id: ${{ secrets.FUNCTIONAL_TEST_APP_ID }}
+          app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
@@ -634,7 +675,7 @@ jobs:
       - name: Create failure issue for failing scheduled run
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_RAD_CI_BOT_PAT }}
           script: |
             github.rest.issues.create({
               ...context.repo,
