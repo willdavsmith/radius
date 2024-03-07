@@ -1,17 +1,22 @@
-name: "Save PR number as artifact"
-description: "Save PR number as artifact"
+name: "Save PR data as artifact"
+description: "Save PR data as artifact"
 runs:
   using: "composite"
   steps:
-    - name: Save PR number
+    - name: Save PR data
       shell: bash
       env:
         PR_NUMBER: ${{ github.event.number }}
+        PR_REF: ${{ github.head_ref }}
       run: |
           mkdir -p ./pr
           echo $PR_NUMBER > ./pr/pr_number
+          echo $PR_REF > ./pr/pr_ref
     - uses: actions/upload-artifact@v3
       with:
         name: pr_number
         path: pr/
-
+    - uses: actions/upload-artifact@v3
+      with:
+        name: pr_ref
+        path: pr/

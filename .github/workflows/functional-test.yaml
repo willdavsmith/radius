@@ -67,6 +67,11 @@ env:
   # Server where terraform test modules are deployed
   TF_RECIPE_MODULE_SERVER_URL: "http://tf-module-server.radius-test-tf-module-server.svc.cluster.local"
 
+  BICEP_RECIPE_REGISTRY: "ghcr.io/willdavsmith/radius"
+  CONTAINER_REGISTRY: "ghcr.io/willdavsmith/radius"
+  FUNCTIONAL_TEST_APP_ID: 811142
+  IMAGE_SRC: "https://github.com/willdavsmith/radius"
+
 jobs:
   build:
     name: Build Radius for test
@@ -99,18 +104,12 @@ jobs:
         run: |
           echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
           echo "CHECKOUT_REF=refs/heads/main" >> $GITHUB_ENV
-      - name: Set up checkout target (pull_request)
-        if: github.event_name == 'pull_request'
-        run: |
-            echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
-            echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_ENV
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
       - name: Use custom actions
         uses: actions/checkout@v3
       - name: 'Download PR data artifacts'
         if: github.event_name == 'workflow_run'
         uses: ./.github/actions/download-pr-data-artifact
-        id: get-pr-number
+        id: get-pr-data
       - name: 'Set PR context (workflow_run)'
         if: github.event_name == 'workflow_run'
         uses: actions/github-script@v6
@@ -122,8 +121,8 @@ jobs:
             // Set environment variables
             fs.appendFileSync(process.env.GITHUB_ENV,
               `CHECKOUT_REPO=${payload.head_repository.full_name}\n`+
-              `CHECKOUT_REF=${payload.head_sha}\n` +
-              `PR_NUMBER=${{ steps.get-pr-number.outputs.pr_number }}\n`);
+              `CHECKOUT_REF=${{ steps.get-pr-data.outputs.pr_ref }}\n` +
+              `PR_NUMBER=${{ steps.get-pr-data.outputs.pr_number }}\n`);
       - name: Set DE image and tag (repository_dispatch from de-functional-test)
         if: github.event_name == 'repository_dispatch'
         uses: actions/github-script@v6
