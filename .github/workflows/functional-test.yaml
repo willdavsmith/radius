@@ -635,7 +635,7 @@ jobs:
       - id: log
         if: always()
         run: |
-          echo "hi2"
+          echo "hi3"
   report-test-results:
     name: Report test results
     needs: [build, tests]
