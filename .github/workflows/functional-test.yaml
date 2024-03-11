@@ -632,6 +632,10 @@ jobs:
           else
             echo "test_status=success" >> $GITHUB_OUTPUT
           fi
+      - id: log
+        if: always()
+        run: |
+          echo "hi"
   report-test-results:
     name: Report test results
     needs: [build, tests]
