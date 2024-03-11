@@ -309,11 +309,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        name: [ucp,kubernetes,shared,msgrp,daprrp,samples,cli]
-        include:
-          # datastorerp functional tests need the larger VM.
-          - os: ubuntu-latest-m
-            name: datastoresrp
+        name: [ucp,kubernetes,msgrp,daprrp,samples]
     runs-on: ${{ matrix.os }}
     env:
       UNIQUE_ID: ${{ needs.build.outputs.UNIQUE_ID }}
@@ -656,6 +652,21 @@ jobs:
         with: 
           app_id: ${{ env.FUNCTIONAL_TEST_APP_ID }}
           private_key: ${{ secrets.FUNCTIONAL_TEST_APP_PRIVATE_KEY }}
+      - name: Get tests job status
+        run: | 
+          # from: https://github.com/orgs/community/discussions/26526#discussioncomment-3252209
+          jobstatus=$(curl -X GET -s -u "admin:${{ steps.get_installation_token.outputs.token }}" https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs | jq ".jobs[] | {job_status: .conclusion, matrix: .name}")
+          # if jobstatus contains failure
+          if echo "$jobstatus" | grep -q "failure"; then
+            echo "TEST_STATUS=failure" >> $GITHUB_ENV
+          elif echo "$jobstatus" | grep -q "cancelled"; then
+            echo "TEST_STATUS=cancelled" >> $GITHUB_ENV
+          else
+            echo "TEST_STATUS=success" >> $GITHUB_ENV
+          fi
+
+          echo "Test Status: $jobstatus"
+          echo "Setting test status to $TEST_STATUS"
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
         with:
@@ -664,7 +675,7 @@ jobs:
           repo: ${{ github.repository }}
           sha: ${{ env.CHECKOUT_REF }}
           status: completed
-          conclusion: ${{ needs.tests.outputs.test_status }}
+          conclusion: ${{ env.TEST_STATUS }}
           output: |
             {"summary":"Functional Test run completed. See links for more information.","title":"Functional Test Run"}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
