@@ -639,6 +639,9 @@ jobs:
           else
             echo "test_status=success" >> $GITHUB_OUTPUT
           fi
+      - id: test
+        run: |
+          echo "Test status: ${{ needs.tests.outputs.test_status }}"
   report-test-results:
     name: Report test results
     needs: [build, tests]
