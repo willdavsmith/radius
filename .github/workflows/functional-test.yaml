@@ -641,7 +641,7 @@ jobs:
           fi
       - id: test
         run: |
-          echo "hi"
+          echo "hi2"
   report-test-results:
     name: Report test results
     needs: [build, tests]
