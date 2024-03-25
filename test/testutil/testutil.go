@@ -330,3 +330,23 @@ func GetCreationTimestamp() string {
 func GenerateS3BucketName() string {
 	return "radiusfunctionaltestbucket-" + uuid.New().String()
 }
+
+// AppendToS3BucketsFile appends the test name and bucket name to a file
+// that contains a list of S3 buckets created during the test.
+// This only occurs if the S3_BUCKETS_FILE environment variable is set.
+func AppendToS3BucketsFile(t *testing.T, testName, bucketName string) {
+	filename := os.Getenv("S3_BUCKETS_FILE")
+	if filename == "" {
+		// Open the file in append mode
+		f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		// Write the bucket name to the file
+		if _, err := f.WriteString(fmt.Sprintf("%s: %s\n", testName, bucketName)); err != nil {
+			log.Fatal(err)
+		}
+	}
+}

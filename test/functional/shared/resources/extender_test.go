@@ -110,6 +110,7 @@ func Test_Extender_RecipeAWS(t *testing.T) {
 	name := "corerp-resources-extenders-aws-s3-recipe"
 	appName := "corerp-resources-extenders-aws-s3-recipe-app"
 	bucketName := testutil.GenerateS3BucketName()
+	testutil.AppendToS3BucketsFile(t, "Test_Extender_RecipeAWS", name)
 	bucketID := fmt.Sprintf("/planes/aws/aws/accounts/%s/regions/%s/providers/AWS.S3/Bucket/%s", awsAccountID, awsRegion, bucketName)
 	creationTimestamp := testutil.GetCreationTimestamp()
 

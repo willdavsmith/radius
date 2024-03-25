@@ -80,6 +80,8 @@ env:
   FUNCTIONAL_TEST_APP_ID: 425843
   # Private Git repository where terraform module for testing is stored.
   TF_RECIPE_PRIVATE_GIT_SOURCE: "git::https://github.com/radius-project/terraform-private-modules//kubernetes-redis"
+  # File containing list of S3 buckets created during the test
+  S3_BUCKETS_FILE: "temp/s3_buckets.txt"
 
 jobs:
   build:
@@ -688,6 +690,12 @@ jobs:
           output: |
             {"summary":"Functional Test run completed. See links for more information.","title":"Functional Test Run"}
           details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: s3_buckets_file
+          path: ./${{ env.S3_BUCKETS_FILE }}
   report-failure:
     name: Report test failure
     needs: [build, tests]

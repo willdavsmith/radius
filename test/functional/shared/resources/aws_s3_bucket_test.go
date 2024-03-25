@@ -28,6 +28,7 @@ import (
 func Test_AWS_S3Bucket(t *testing.T) {
 	template := "testdata/aws-s3-bucket.bicep"
 	name := testutil.GenerateS3BucketName()
+	testutil.AppendToS3BucketsFile(t, "Test_AWS_S3Bucket", name)
 	creationTimestamp := testutil.GetCreationTimestamp()
 
 	test := shared.NewRPTest(t, name, []shared.TestStep{
@@ -67,6 +68,7 @@ func Test_AWS_S3Bucket_Existing(t *testing.T) {
 	template := "testdata/aws-s3-bucket.bicep"
 	templateExisting := "testdata/aws-s3-bucket-existing.bicep"
 	name := testutil.GenerateS3BucketName()
+	testutil.AppendToS3BucketsFile(t, "Test_AWS_S3Bucket_Existing", name)
 	creationTimestamp := testutil.GetCreationTimestamp()
 
 	test := shared.NewRPTest(t, name, []shared.TestStep{
