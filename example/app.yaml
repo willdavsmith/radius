@@ -2,7 +2,7 @@ kind: ApplicationDeployment
 apiVersion: radapp.io/v1alpha3
 metadata:
   name: demo
-  namespace: demo
+  namespace: default
 spec:
   template: |
     {
@@ -47,11 +47,24 @@ spec:
                     "containerPort": 3000
                   }
                 }
-              },
-              "connections": {
-                "redis": {
-                  "source": "[reference('db').id]"
                 }
+                }
+              }
+            }
+          },
+          "dependsOn": [
+            "db"
+          ]
+        },
+        "db": {
+          "import": "radius",
+          "type": "Applications.Datastores/redisCaches@2023-10-01-preview",
+          "properties": {
+            "name": "db",
+            "properties": {
+              "application": "[parameters('application')]",
+              "environment": "[parameters('environment')]"
+              }
               }
             }
           },

@@ -38,6 +38,7 @@ rules:
   resources:
   - recipes
   - recipes/status
+  - applicationdeployments
   verbs:
   - create
   - delete

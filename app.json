@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "1.9-experimental",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+    "_generator": {
+      "name": "bicep",
+      "version": "0.36.0.1",
+      "templateHash": "10173979135192776249"
+    }
+  },
+  "parameters": {
+    "application": {
+      "type": "string",
+      "metadata": {
+        "description": "The application ID being deployed. Injected automtically by the rad CLI"
+      }
+    }
+  },
+  "imports": {
+    "rad": {
+      "provider": "Radius",
+      "version": "1.0"
+    }
+  },
+  "resources": {
+    "demo": {
+      "import": "rad",
+      "type": "Applications.Core/containers@2023-10-01-preview",
+      "properties": {
+        "name": "demo",
+        "properties": {
+          "application": "[parameters('application')]",
+          "container": {
+            "image": "ghcr.io/radius-project/samples/demo:latest",
+            "ports": {
+              "web": {
+                "containerPort": 3000
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

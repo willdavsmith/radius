@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -235,34 +237,37 @@ func (r *ApplicationDeploymentReconciler) reconcileUpdate(ctx context.Context, d
 	// fully processed any status changes until the async operation completes.
 	deployment.Status.ObservedGeneration = deployment.Generation
 
-	environmentName := "default"
-	if deployment.Spec.Environment != "" {
-		environmentName = deployment.Spec.Environment
-	}
+	// environmentName := "default"
+	// if deployment.Spec.Environment != "" {
+	// 	fmt.Println("Environment is not default, it is: " + deployment.Spec.Environment)
+	// 	environmentName = deployment.Spec.Environment
+	// }
 
-	applicationName := deployment.Namespace
-	if deployment.Spec.Application != "" {
-		applicationName = deployment.Spec.Application
-	}
+	// applicationName := deployment.Namespace
+	// if deployment.Spec.Application != "" {
+	// 	applicationName = deployment.Spec.Application
+	// }
 
-	labels := map[string]string{}
-	if deployment.ObjectMeta.Labels != nil {
-		argoLabel, ok := deployment.ObjectMeta.Labels["argocd.argoproj.io/instance"]
-		if ok {
-			labels["argocd.argoproj.io/instance"] = argoLabel
-		}
-	}
+	// labels := map[string]string{}
+	// if deployment.ObjectMeta.Labels != nil {
+	// 	argoLabel, ok := deployment.ObjectMeta.Labels["argocd.argoproj.io/instance"]
+	// 	if ok {
+	// 		labels["argocd.argoproj.io/instance"] = argoLabel
+	// 	}
+	// }
 
-	resourceGroupID, environmentID, applicationID, err := resolveDependencies(ctx, r.Radius, "/planes/radius/local", environmentName, applicationName, labels)
-	if err != nil {
-		r.EventRecorder.Event(deployment, corev1.EventTypeWarning, "DependencyError", err.Error())
-		logger.Error(err, "Unable to resolve dependencies.")
-		return ctrl.Result{}, fmt.Errorf("failed to resolve dependencies: %w", err)
-	}
+	// resourceGroupID, environmentID, applicationID, err := resolveDependencies(ctx, r.Radius, "/planes/radius/local", environmentName, applicationName, labels)
+	// if err != nil {
+	// 	r.EventRecorder.Event(deployment, corev1.EventTypeWarning, "DependencyError", err.Error())
+	// 	logger.Error(err, "Unable to resolve dependencies.")
+	// 	return ctrl.Result{}, fmt.Errorf("failed to resolve dependencies: %w", err)
+	// }
 
-	deployment.Status.Scope = resourceGroupID
-	deployment.Status.Environment = environmentID
-	deployment.Status.Application = applicationID
+	createDefaultResourceGroup(ctx, r.Radius)
+
+	deployment.Status.Scope = "/planes/radius/local/resourcegroups/default"
+	deployment.Status.Environment = "/planes/radius/local/resourcegroups/default/providers/Applications.Core/environments/flux-demo-env"
+	deployment.Status.Application = "/planes/radius/local/resourcegroups/default/providers/Applications.Core/applications/flux-demo-app"
 
 	updatePoller, deletePoller, err := r.startPutOrDeleteOperationIfNeeded(ctx, deployment)
 	if err != nil {
@@ -395,8 +400,10 @@ func (r *ApplicationDeploymentReconciler) startPutOrDeleteOperationIfNeeded(ctx 
 		return nil, nil, nil
 	}
 
+	armJSON := compileBicep(deployment.Spec.Template)
+
 	template := map[string]any{}
-	err := json.Unmarshal([]byte(deployment.Spec.Template), &template)
+	err := json.Unmarshal([]byte(armJSON), &template)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to unmarshal template: %w", err)
 	}
@@ -418,15 +425,8 @@ func (r *ApplicationDeploymentReconciler) startPutOrDeleteOperationIfNeeded(ctx 
 				},
 			},
 		}, // TODO other providers
-		"template": template,
-		"parameters": map[string]map[string]any{
-			"application": {
-				"value": deployment.Status.Application,
-			},
-			"environment": {
-				"value": deployment.Status.Environment,
-			},
-		}, // TODO
+		"template":   template,
+		"parameters": map[string]map[string]any{}, // TODO
 	}
 
 	poller, err := createOrUpdateResource(ctx, r.Radius, resourceID, properties)
@@ -476,4 +476,46 @@ func (r *ApplicationDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) err
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&radappiov1alpha3.ApplicationDeployment{}).
 		Complete(r)
+}
+
+func compileBicep(template string) string {
+	createFileWithContents("app.bicep", template)
+	app := "./rad-bicep-linux-x64"
+
+	arg0 := "build"
+	arg1 := "app.bicep"
+	arg2 := "--stdout"
+
+	cmd := exec.Command(app, arg0, arg1, arg2)
+
+	stdout, err := cmd.Output()
+
+	if err != nil {
+		fmt.Println("Error: ")
+		fmt.Println(cmd.Stderr)
+		fmt.Println(err.Error())
+	}
+
+	// Print the output
+	fmt.Println("Output: ")
+	fmt.Println(string(stdout))
+
+	return string(stdout)
+}
+
+func createFileWithContents(filename, contents string) error {
+	// Create a new file or truncate the existing file
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Write the string contents to the file
+	_, err = file.WriteString(contents)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

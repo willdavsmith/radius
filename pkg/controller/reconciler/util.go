@@ -31,6 +31,16 @@ import (
 	"github.com/radius-project/radius/pkg/ucp/ucplog"
 )
 
+func createDefaultResourceGroup(ctx context.Context, radius RadiusClient) {
+	// NOTE: using resource groups with lowercase here is a workaround for a casing bug in `rad app graph`.
+	// When https://github.com/radius-project/radius/issues/6422 is fixed we can use the more correct casing.
+	resourceGroupID := fmt.Sprintf("/planes/radius/local/resourcegroups/default")
+	err := createResourceGroupIfNotExists(ctx, radius, resourceGroupID)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func resolveDependencies(ctx context.Context, radius RadiusClient, scope string, environmentName string, applicationName string, labels map[string]string) (resourceGroupID string, environmentID string, applicationID string, err error) {
 	found, err := findEnvironment(ctx, radius, scope, environmentName)
 	if found == nil {

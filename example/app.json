@@ -6,28 +6,27 @@
     "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
     "_generator": {
       "name": "bicep",
-      "version": "0.30.0.1",
-      "templateHash": "3712878479444741567"
+      "version": "0.36.0.1",
+      "templateHash": "10173979135192776249"
     }
   },
   "parameters": {
     "application": {
       "type": "string",
-      "minLength": 1
-    },
-    "environment": {
-      "type": "string"
+      "metadata": {
+        "description": "The application ID being deployed. Injected automtically by the rad CLI"
+      }
     }
   },
   "imports": {
-    "radius": {
+    "rad": {
       "provider": "Radius",
       "version": "1.0"
     }
   },
   "resources": {
     "demo": {
-      "import": "radius",
+      "import": "rad",
       "type": "Applications.Core/containers@2023-10-01-preview",
       "properties": {
         "name": "demo",
@@ -40,26 +39,7 @@
                 "containerPort": 3000
               }
             }
-          },
-          "connections": {
-            "redis": {
-              "source": "[reference('db').id]"
-            }
           }
-        }
-      },
-      "dependsOn": [
-        "db"
-      ]
-    },
-    "db": {
-      "import": "radius",
-      "type": "Applications.Datastores/redisCaches@2023-10-01-preview",
-      "properties": {
-        "name": "db",
-        "properties": {
-          "application": "[parameters('application')]",
-          "environment": "[parameters('environment')]"
         }
       }
     }
