@@ -103,8 +103,7 @@ APPS_MAP := ucpd:./deploy/images/ucpd \
 	applications-rp:./deploy/images/applications-rp \
 	controller:./deploy/images/controller \
 	testrp:./test/testrp \
-	magpiego:./test/magpiego \
-	bicep:./deploy/images/bicep
+	magpiego:./test/magpiego
 
 # Function to extract the name and the directory of the Dockerfile from the app string
 define parseApp
