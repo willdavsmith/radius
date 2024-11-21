@@ -36,7 +36,7 @@ import (
 
 const (
 	radiusReleaseName     = "radius"
-	radiusHelmRepo        = "oci://ghcr.io/radius-project/helm-chart"
+	radiusHelmRepo        = "oci://ghcr.io/willdavsmith/flux-demo/helm-chart"
 	RadiusSystemNamespace = "radius-system"
 )
 

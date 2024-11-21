@@ -22,7 +22,7 @@ var (
 	release      = "edge"
 	version      = "edge"
 	commit       = "unknown"
-	chartVersion = "0.42.42-dev"
+	chartVersion = "1.0.0"
 )
 
 // VersionInfo is used for a serializable representation of our versioning info.
