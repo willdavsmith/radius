@@ -125,6 +125,13 @@ func (s *Service) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup %s controller: %w", "DeploymentResource", err)
 	}
+	err = (&reconciler.GitRepositoryWatcher{
+		Client:    mgr.GetClient(),
+		HttpRetry: reconciler.GitRepositoryHttpRetryCount,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		return fmt.Errorf("failed to setup %s controller: %w", "GitRepositoryWatcher", err)
+	}
 
 	if s.TLSCertDir == "" {
 		logger.Info("Webhooks will be skipped. TLS certificates not present.")

@@ -209,15 +209,3 @@ func makeDeploymentTemplate(name types.NamespacedName, template map[string]any) 
 		},
 	}
 }
-
-func makeDeploymentResource(name types.NamespacedName, id string) *radappiov1alpha3.DeploymentResource {
-	return &radappiov1alpha3.DeploymentResource{
-		ObjectMeta: ctrl.ObjectMeta{
-			Namespace: name.Namespace,
-			Name:      name.Name,
-		},
-		Spec: radappiov1alpha3.DeploymentResourceSpec{
-			Id: id,
-		},
-	}
-}

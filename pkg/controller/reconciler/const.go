@@ -56,4 +56,7 @@ const (
 
 	// RadiusSystemNamespace is the name of the system namespace where Radius resources are stored.
 	RadiusSystemNamespace = "radius-system"
+
+	// GitRepositoryHttpRetryCount is the number of times to retry GitRepository HTTP requests.
+	GitRepositoryHttpRetryCount = 9
 )
