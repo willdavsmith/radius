@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	"github.com/radius-project/radius/pkg/armrpc/hostoptions"
 	"github.com/radius-project/radius/pkg/components/hosting"
 	radappiov1alpha3 "github.com/radius-project/radius/pkg/controller/api/radapp.io/v1alpha3"
@@ -42,6 +43,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(radappiov1alpha3.AddToScheme(scheme))
+	utilruntime.Must(sourcev1.AddToScheme(scheme))
 }
 
 var _ hosting.Service = (*Service)(nil)
@@ -124,6 +126,13 @@ func (s *Service) Run(ctx context.Context) error {
 	}).SetupWithManager(mgr)
 	if err != nil {
 		return fmt.Errorf("failed to setup %s controller: %w", "DeploymentResource", err)
+	}
+	err = (&reconciler.GitRepositoryWatcher{
+		Client:    mgr.GetClient(),
+		HttpRetry: reconciler.GitRepositoryHttpRetryCount,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		return fmt.Errorf("failed to setup %s controller: %w", "GitRepositoryWatcher", err)
 	}
 
 	if s.TLSCertDir == "" {

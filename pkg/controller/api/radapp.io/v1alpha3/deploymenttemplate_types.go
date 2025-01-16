@@ -28,8 +28,11 @@ type DeploymentTemplateSpec struct {
 	// Parameters is the ARM JSON parameters for the template.
 	Parameters map[string]string `json:"parameters,omitempty"`
 
-	// ProviderConfig specifies the scope for resources
+	// ProviderConfig specifies the scope for resources.
 	ProviderConfig string `json:"providerConfig,omitempty"`
+
+	// Repository is the git repository that the Bicep manifests are stored in.
+	Repository string `json:"repository,omitempty"`
 }
 
 // DeploymentTemplateStatus defines the observed state of DeploymentTemplate
