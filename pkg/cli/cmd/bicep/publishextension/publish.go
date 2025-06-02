@@ -110,8 +110,6 @@ func (r *Runner) Run(ctx context.Context) error {
 	// 2. We use `bicep publish-extension` to publish the extension "index" to the "target"
 	// 3. We can clean up the "index" directory after publishing.
 
-	// TODO: point to the correct path
-
 	temp, err := os.MkdirTemp("", "bicep-extension-*")
 	if err != nil {
 		return err
@@ -136,7 +134,14 @@ func (r *Runner) Run(ctx context.Context) error {
 func generateBicepExtensionIndex(ctx context.Context, inputFilePath string, outputDirectoryPath string) error {
 	manifestToBicepExtensionPath, err := bicep.GetBicepManifestToBicepExtensionCLIPath()
 	if err != nil {
-		return err
+		return clierrors.MessageWithCause(err, "Failed to get manifest-to-bicep-extension CLI path")
+	}
+
+	// Check if the manifest-to-bicep-extension CLI exists
+	if _, err := os.Stat(manifestToBicepExtensionPath); os.IsNotExist(err) {
+		return clierrors.Message("manifest-to-bicep-extension CLI not found. Please run `rad bicep download` to install it.")
+	} else if err != nil {
+		return clierrors.MessageWithCause(err, "Failed to check if manifest-to-bicep-extension CLI exists at %q", manifestToBicepExtensionPath)
 	}
 
 	// manifest-to-bicep-extension generate <resource provider> <temp>

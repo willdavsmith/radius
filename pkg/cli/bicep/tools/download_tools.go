@@ -30,6 +30,9 @@ import (
 const (
 	// binaryRepo is the name of the remote bicep binary repository
 	binaryRepo = "https://github.com/Azure/bicep/releases/latest/download/"
+
+	// manifestToBicepExtensionCLIRepo is the name of the remote manifest-to-bicep-extension CLI repository
+	manifestToBicepExtensionCLIRepo = "https://github.com/radius-project/bicep-tools/releases/latest/download/"
 )
 
 // validPlatforms is a map of valid platforms to download for.
