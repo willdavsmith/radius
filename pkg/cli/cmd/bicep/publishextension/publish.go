@@ -18,7 +18,6 @@ package publishextension
 
 import (
 	"context"
-	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -107,16 +106,11 @@ func (r *Runner) Validate(cmd *cobra.Command, args []string) error {
 // Run runs the `rad bicep publish-extension` command.
 func (r *Runner) Run(ctx context.Context) error {
 	// This command ties together two separate shell commands:
-	// 1. We use NPX to run https://github.com/radius-project/bicep-tools/tree/main/packages/manifest-to-bicep-extension
-	//       - This generates a Bicep extension "index"
+	// 1. We use the manifest-to-bicep-extension CLI tool to generate a Bicep extension "index" from the resource provider manifest file
 	// 2. We use `bicep publish-extension` to publish the extension "index" to the "target"
-	//
 	// 3. We can clean up the "index" directory after publishing.
 
-	_, err := exec.LookPath("npx")
-	if errors.Is(err, exec.ErrNotFound) {
-		return clierrors.Message("The command 'npx' was not found on the PATH. Please install Node.js 16+ to use this command.")
-	}
+	// TODO: point to the correct path
 
 	temp, err := os.MkdirTemp("", "bicep-extension-*")
 	if err != nil {
@@ -140,20 +134,25 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func generateBicepExtensionIndex(ctx context.Context, inputFilePath string, outputDirectoryPath string) error {
-	// npx @radius-project/manifest-to-bicep-extension@alpha generate <resource provider> <temp>
+	manifestToBicepExtensionPath, err := bicep.GetBicepManifestToBicepExtensionCLIPath()
+	if err != nil {
+		return err
+	}
+
+	// manifest-to-bicep-extension generate <resource provider> <temp>
 	args := []string{
-		"@radius-project/manifest-to-bicep-extension@alpha",
 		"generate",
 		inputFilePath,
 		outputDirectoryPath,
 	}
-	cmd := exec.CommandContext(ctx, "npx", args...)
+
+	cmd := exec.CommandContext(ctx, manifestToBicepExtensionPath, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return clierrors.MessageWithCause(err, "Failed to generate Bicep extension")
+		return clierrors.MessageWithCause(err, "Failed to generate Bicep extension index from resource provider manifest %q", inputFilePath)
 	}
 
 	return nil

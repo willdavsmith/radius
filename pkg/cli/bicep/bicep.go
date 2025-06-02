@@ -17,28 +17,43 @@ limitations under the License.
 package bicep
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/radius-project/radius/pkg/cli/bicep/tools"
+	biceptools "github.com/radius-project/radius/pkg/cli/bicep/tools"
+	"github.com/radius-project/radius/pkg/retry"
 )
 
 const (
-	radBicepEnvVar = "RAD_BICEP"
-	binaryName     = "rad-bicep"
-	retryAttempts  = 10
-	retryDelaySecs = 5
+	radBicepEnvVar                  = "RAD_BICEP"
+	binaryName                      = "rad-bicep"
+	manifestToBicepExtensionCLIName = "manifest-to-bicep-extension"
 )
 
 func GetBicepFilePath() (string, error) {
 	return tools.GetLocalFilepath(radBicepEnvVar, binaryName)
 }
 
-// IsBicepInstalled returns true if our local copy of bicep is installed
-//
+// GetBicepManifestToBicepExtensionCLIPath returns the path to the manifest-to-bicep-extension CLI tool.
+func GetBicepManifestToBicepExtensionCLIPath() (string, error) {
+	// The manifest-to-bicep-extension CLI is expected to be in the same directory as the Bicep binary.
+	filepath, err := GetBicepFilePath()
+	if err != nil {
+		return "", fmt.Errorf("failed to get Bicep file path: %v", err)
+	}
 
-// IsBicepInstalled checks if the Bicep binary is installed on the local machine and returns a boolean and an error if one occurs.
+	// Remove the binary name and append the manifest-to-bicep-extension CLI name.
+	filepath = filepath[:len(filepath)-len(binaryName)]
+
+	// Append the manifest-to-bicep-extension CLI name.
+	filepath = filepath + manifestToBicepExtensionCLIName
+
+	return filepath, nil
+}
+
+// IsBicepInstalled checks if the Bicep binary is installed on the local machine.
 func IsBicepInstalled() (bool, error) {
 	filepath, err := GetBicepFilePath()
 	if err != nil {
@@ -55,7 +70,7 @@ func IsBicepInstalled() (bool, error) {
 	return true, nil
 }
 
-// DeleteBicep cleans our local copy of bicep
+// DeleteBicep removes the Bicep binary from the local machine.
 func DeleteBicep() error {
 	filepath, err := GetBicepFilePath()
 	if err != nil {
@@ -70,41 +85,36 @@ func DeleteBicep() error {
 	return nil
 }
 
-// DownloadBicep updates our local copy of bicep
-//
-
-// DownloadBicep() attempts to download a file from a given URI and save it to a local filepath, retrying up to 10 times if
-// the download fails. If an error occurs, an error is returned.
+// DownloadBicep downloads the Bicep binary to the local machine.
 func DownloadBicep() error {
+	ctx := context.Background()
+	retryer := retry.NewDefaultRetryer()
+
+	// Download the Bicep binary
 	filepath, err := GetBicepFilePath()
 	if err != nil {
 		return err
 	}
 
-	retryAttempts := 10
-	for attempt := 1; attempt <= retryAttempts; attempt++ {
-		success, err := retry(filepath, attempt, retryAttempts)
-		if err != nil {
-			return err
-		}
-		if success {
-			break
-		}
+	err = retryer.RetryFunc(ctx, func(ctx context.Context) error {
+		return biceptools.DownloadToFolder(filepath)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to download bicep: %v", err)
+	}
+
+	// Download the manifest-to-bicep-extension CLI
+	manifestToBicepExtensionCLIPath, err := GetBicepManifestToBicepExtensionCLIPath()
+	if err != nil {
+		return err
+	}
+
+	err = retryer.RetryFunc(ctx, func(ctx context.Context) error {
+		return biceptools.DownloadManifestToBicepExtensionCLI(manifestToBicepExtensionCLIPath)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to download manifest-to-bicep-extension CLI: %v", err)
 	}
 
 	return nil
-}
-
-func retry(filepath string, attempt, retryAttempts int) (bool, error) {
-	err := tools.DownloadToFolder(filepath)
-	if err != nil {
-		if attempt == retryAttempts {
-			return false, fmt.Errorf("failed to download bicep: %v", err)
-		}
-		fmt.Printf("Attempt %d failed to download bicep: %v\nRetrying...", attempt, err)
-		time.Sleep(retryDelaySecs * time.Second)
-		return false, nil
-	}
-
-	return true, nil
 }

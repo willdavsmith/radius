@@ -32,7 +32,9 @@ const (
 	binaryRepo = "https://github.com/Azure/bicep/releases/latest/download/"
 )
 
-// validPlatforms is a map of valid platforms to download for. The key is the combination of GOOS and GOARCH.
+// validPlatforms is a map of valid platforms to download for.
+// The key is the combination of GOOS and GOARCH and the value is
+// the corresponding binary os-arch that Bicep uses.
 var validPlatforms = map[string]string{
 	"windows-amd64": "bicep-win-x64",
 	"windows-arm64": "bicep-win-arm64",
@@ -44,11 +46,6 @@ var validPlatforms = map[string]string{
 
 // GetLocalFilepath returns the local binary file path. It does not verify that the file
 // exists on disk.
-//
-
-// GetLocalFilepath checks for an override path in an environment variable, and if it exists, returns it. If not, it
-// returns the path to the binary in the user's home directory. It returns an error if it cannot find the user's home
-// directory or if the filename is invalid.
 func GetLocalFilepath(overrideEnvVarName string, binaryName string) (string, error) {
 	override, err := getOverridePath(overrideEnvVarName, binaryName)
 	if err != nil {
@@ -113,6 +110,7 @@ func GetValidPlatform(currentOS, currentArch string) (string, error) {
 }
 
 // DownloadToFolder creates a folder and a file, downloads the bicep binary to the file,
+// and makes the file executable. It returns an error if any step fails.
 func DownloadToFolder(filepath string) error {
 	// Create folders
 	err := os.MkdirAll(path.Dir(filepath), os.ModePerm)
@@ -166,6 +164,11 @@ func DownloadToFolder(filepath string) error {
 		return fmt.Errorf("failed to change permissions for %s: %v", filepath, err)
 	}
 
+	return nil
+}
+
+func DownloadManifestToBicepExtensionCLI(filepath string) error {
+	// TODO: Where do we (remotely) store the manifest-to-bicep-extension CLI?
 	return nil
 }
 
