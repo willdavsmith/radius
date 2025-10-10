@@ -222,6 +222,10 @@ jobs:
         with:
           tag: ${{ env.DE_TAG }}
       
+      - name: Set Deployment Engine image
+        run: |
+          echo "DE_IMAGE=radius-project/deployment-engine" >> $GITHUB_ENV
+      
       - name: Check out code
         uses: actions/checkout@v5
         with:
