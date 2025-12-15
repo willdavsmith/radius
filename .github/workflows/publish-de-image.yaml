@@ -17,9 +17,9 @@ on:
   repository_dispatch:
     types: [deployment-engine.publish]
     # Expected client_payload:
-    #   src_image: Source image in ACR (e.g. radiusdeploymentengine.azure
+    #   src_image: Source image in ACR (e.g. radiusdeploymentengine.azurecr.io/deployment-engine)
     #   dest_image: Destination image in GHCR (e.g. ghcr.io/radius-project/deployment-engine)
-    #   tag: Tag for the image (e.g. 1.0)
+    #   tag: Tag for the image (e.g. latest, 0.1, 0.1.0-rc1, pr-123)
 
 permissions: {}
 
@@ -64,6 +64,6 @@ jobs:
           DE_CONTAINER_AZURE_TENANT_ID: ${{ secrets.DE_CONTAINER_AZURE_TENANT_ID }}
           DE_CONTAINER_AZURE_SUBSCRIPTION_ID: ${{ secrets.DE_CONTAINER_AZURE_SUBSCRIPTION_ID }}
         with:
-          tag: ${{ steps.payload.outputs.tag }}
           src_image: ${{ steps.payload.outputs.src_image }}
           dest_image: ${{ steps.payload.outputs.dest_image }}
+          tag: ${{ steps.payload.outputs.tag }}

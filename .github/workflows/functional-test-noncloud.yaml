@@ -38,6 +38,10 @@ on:
   # Dispatch on external events
   repository_dispatch:
     types: [deployment-engine.run-functional-tests]
+    # Expected client_payload:
+    #   src_image: Source image in ACR (e.g. radiusdeploymentengine.azurecr.io/deployment-engine)
+    #   dest_image: Destination image in GHCR (e.g. ghcr.io/radius-project/deployment-engine)
+    #   tag: Tag for the image (e.g. latest, 0.1, 0.1.0-rc1, pr-123)
   pull_request:
     branches:
       - main
@@ -109,18 +113,6 @@ jobs:
       DE_IMAGE: ${{ steps.gen-id.outputs.DE_IMAGE }}
       DE_TAG: ${{ steps.gen-id.outputs.DE_TAG }}
     steps:
-      - name: Set DE image and tag (repository_dispatch from deployment-engine.run-functional-tests)
-        if: github.event_name == 'repository_dispatch'
-        shell: bash
-        env:
-          IMAGE_NAME: ${{ github.event.client_payload.image_name }}
-          TAG: ${{ github.event.client_payload.tag }}
-        run: |
-          {
-            echo "DE_IMAGE=${IMAGE_NAME}"
-            echo "DE_TAG=${TAG}"
-          } >> "$GITHUB_ENV"
-
       - name: Check out code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
@@ -136,9 +128,21 @@ jobs:
           DE_CONTAINER_AZURE_TENANT_ID: ${{ secrets.DE_CONTAINER_AZURE_TENANT_ID }}
           DE_CONTAINER_AZURE_SUBSCRIPTION_ID: ${{ secrets.DE_CONTAINER_AZURE_SUBSCRIPTION_ID }}
         with:
-          tag: ${{ env.DE_TAG }}
-          src_image: ${{ env.DE_IMAGE }}
-          dest_image: ghcr.io/radius-project/deployment-engine
+          src_image: ${{ github.event.client_payload.src_image }}
+          dest_image: ${{ github.event.client_payload.dest_image }}
+          tag: ${{ github.event.client_payload.tag }}
+
+      - name: Set DE image and tag (repository_dispatch from deployment-engine.run-functional-tests)
+        if: github.event_name == 'repository_dispatch'
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ github.event.client_payload.dest_image }}
+          TAG: ${{ github.event.client_payload.tag }}
+        run: |
+          {
+            echo "DE_IMAGE=${IMAGE_NAME}"
+            echo "DE_TAG=${TAG}"
+          } >> "$GITHUB_ENV"
 
       - name: Generate ID for release
         id: gen-id
