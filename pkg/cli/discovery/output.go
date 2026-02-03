@@ -114,7 +114,10 @@ func (w *OutputWriter) generateMarkdown(result *DiscoveryResult) (string, error)
 	}
 
 	// Generate Markdown body
-	tmpl, err := template.New("discovery").Parse(discoveryTemplate)
+	funcs := template.FuncMap{
+		"mul": func(a, b float64) float64 { return a * b },
+	}
+	tmpl, err := template.New("discovery").Funcs(funcs).Parse(discoveryTemplate)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -219,10 +222,3 @@ No services detected.
 3. Customize the generated application definition as needed
 4. Run ` + "`rad deploy`" + ` to deploy your application
 `
-
-func init() {
-	// Register template function
-	template.Must(template.New("").Funcs(template.FuncMap{
-		"mul": func(a, b float64) float64 { return a * b },
-	}).Parse(""))
-}

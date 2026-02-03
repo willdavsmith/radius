@@ -1,4 +1,3 @@
-package progress
 /*
 Copyright 2023 The Radius Authors.
 

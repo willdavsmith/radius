@@ -257,6 +257,19 @@ func (r *Runner) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to write discovery output: %w", err)
 	}
 
+	// Also write JSON format for rad app generate to consume
+	jsonPath := filepath.Join(filepath.Dir(r.OutputPath), ".discovery", "result.json")
+	if err := os.MkdirAll(filepath.Dir(jsonPath), 0755); err != nil {
+		return fmt.Errorf("failed to create .discovery directory: %w", err)
+	}
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal discovery result: %w", err)
+	}
+	if err := os.WriteFile(jsonPath, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write discovery JSON: %w", err)
+	}
+
 	tracker.Complete("Discovery complete")
 
 	r.Output.LogInfo("")

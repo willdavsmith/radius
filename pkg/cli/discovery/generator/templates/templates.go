@@ -1,4 +1,3 @@
-package templates
 /*
 Copyright 2023 The Radius Authors.
 
