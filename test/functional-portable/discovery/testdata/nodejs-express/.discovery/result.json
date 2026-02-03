@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "analyzedAt": "2026-02-03T13:46:18.419442-08:00",
+  "codebasePath": "/Users/willsmith/dev/radius/radius/test/functional-portable/discovery/testdata/nodejs-express",
+  "dependencies": [
+    {
+      "type": "redis",
+      "technology": "Redis",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "source": "package.json",
+          "type": "pattern",
+          "value": "redis"
+        }
+      ]
+    },
+    {
+      "type": "postgresql",
+      "technology": "PostgreSQL",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "source": "package.json",
+          "type": "pattern",
+          "value": "postgres"
+        },
+        {
+          "source": "package.json",
+          "type": "pattern",
+          "value": "pg"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "name": "src",
+      "type": "http",
+      "entrypoint": "src/index.js",
+      "port": 3000,
+      "framework": "express",
+      "language": "nodejs",
+      "confidence": 0.7
+    }
+  ],
+  "state": "complete"
+}
