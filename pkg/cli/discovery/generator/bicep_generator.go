@@ -69,12 +69,12 @@ func (g *BicepGenerator) Description() string {
 
 // InputSchema returns the JSON Schema for the input.
 func (g *BicepGenerator) InputSchema() json.RawMessage {
-	return json.RawMessage(`{"type":"object","properties":{"appName":{"type":"string"},"dependencies":{"type":"array"},"services":{"type":"array"}},"required":["appName","dependencies","services"]}`)
+	return json.RawMessage(`{"type":"object","properties":{"appName":{"type":"string"},"dependencies":{"type":"array","items":{"type":"object"}},"services":{"type":"array","items":{"type":"object"}}},"required":["appName","dependencies","services"]}`)
 }
 
 // OutputSchema returns the JSON Schema for the output.
 func (g *BicepGenerator) OutputSchema() json.RawMessage {
-	return json.RawMessage(`{"type":"object","properties":{"bicepContent":{"type":"string"},"appDefinition":{"type":"object"},"warnings":{"type":"array"}}}`)
+	return json.RawMessage(`{"type":"object","properties":{"bicepContent":{"type":"string"},"appDefinition":{"type":"object"},"warnings":{"type":"array","items":{"type":"string"}}}}`)
 }
 
 // Execute runs the Bicep generation.

@@ -79,6 +79,9 @@ const (
 
 	// ErrCodeInputValidation indicates input validation failed.
 	ErrCodeInputValidation = "INPUT_VALIDATION"
+
+	// ErrCodeInternal indicates an internal error occurred.
+	ErrCodeInternal = "INTERNAL_ERROR"
 )
 
 // DiscoveryError is the base error type for discovery operations.

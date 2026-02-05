@@ -86,7 +86,7 @@ func (d *Detector) OutputSchema() json.RawMessage {
 						"type": {"type": "string"},
 						"technology": {"type": "string"},
 						"confidence": {"type": "number"},
-						"evidence": {"type": "array"}
+						"evidence": {"type": "array", "items": {"type": "object"}}
 					}
 				}
 			}

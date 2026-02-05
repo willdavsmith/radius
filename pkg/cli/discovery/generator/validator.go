@@ -66,7 +66,7 @@ func (v *Validator) InputSchema() json.RawMessage {
 
 // OutputSchema returns the JSON Schema for the output.
 func (v *Validator) OutputSchema() json.RawMessage {
-	return json.RawMessage(`{"type":"object","properties":{"valid":{"type":"boolean"},"errors":{"type":"array"},"warnings":{"type":"array"}}}`)
+	return json.RawMessage(`{"type":"object","properties":{"valid":{"type":"boolean"},"errors":{"type":"array","items":{"type":"object"}},"warnings":{"type":"array","items":{"type":"string"}}}}`)
 }
 
 // Execute runs the validation.

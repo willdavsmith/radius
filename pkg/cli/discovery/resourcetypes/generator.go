@@ -95,14 +95,17 @@ func (g *Generator) OutputSchema() json.RawMessage {
 		"properties": {
 			"resourceTypes": {
 				"type": "array",
+				"items": {"type": "object"},
 				"description": "Generated Resource Type definitions"
 			},
 			"unmappedTypes": {
 				"type": "array",
+				"items": {"type": "string"},
 				"description": "Dependency types that couldn't be mapped"
 			},
 			"warnings": {
 				"type": "array",
+				"items": {"type": "string"},
 				"description": "Warnings encountered during generation"
 			}
 		}

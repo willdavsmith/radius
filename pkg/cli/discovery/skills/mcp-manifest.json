@@ -1,0 +1,240 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/specification/main/schema/mcp-schema.json",
+  "name": "radius-discovery",
+  "version": "1.0.0",
+  "description": "Radius Application Discovery and Generation skills for AI agents",
+  "protocol": "2024-11-05",
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "tools": [
+    {
+      "name": "Failed to validate tool mcp_radius-discov_explain_discovery: Error: tool parameters array type must have items. Please open a Github issue for the MCP server or extension which provides this tool",
+      "description": "Performs comprehensive codebase analysis to discover infrastructure dependencies, services, and generate Radius resource mappings. This is the primary entry point for AI agents.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Root path of the codebase to analyze"
+          },
+          "excludePaths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Paths to exclude from analysis"
+          },
+          "confidenceThreshold": {
+            "type": "number",
+            "description": "Minimum confidence score (0.0-1.0)",
+            "default": 0.5
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "discover_dependencies",
+      "description": "Analyzes a codebase to detect infrastructure dependencies such as databases, message queues, and external services.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Root path of the codebase to analyze"
+          },
+          "excludePaths": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "confidenceThreshold": {
+            "type": "number",
+            "default": 0.5
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "discover_services",
+      "description": "Detects services and application entrypoints in a codebase.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Root path of the codebase to analyze"
+          },
+          "excludePaths": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "generate_resource_types",
+      "description": "Maps detected infrastructure dependencies to Radius Resource Type definitions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "List of detected dependencies to map"
+          }
+        },
+        "required": ["dependencies"]
+      }
+    },
+    {
+      "name": "generate_app_definition",
+      "description": "Generates a Radius application definition (app.bicep) from discovery results.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "Name for the Radius application"
+          },
+          "dependencies": {
+            "type": "array",
+            "description": "Detected dependencies"
+          },
+          "services": {
+            "type": "array",
+            "description": "Detected services"
+          }
+        },
+        "required": ["appName", "dependencies", "services"]
+      }
+    },
+    {
+      "name": "generate_deployment",
+      "description": "End-to-end: Analyzes codebase and generates complete deployment artifacts ready for 'rad deploy'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "codebasePath": {
+            "type": "string",
+            "description": "Root path of the codebase"
+          },
+          "appName": {
+            "type": "string",
+            "description": "Name for the application"
+          },
+          "containerImages": {
+            "type": "object",
+            "description": "Map of service name to container image URI"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "If true, returns content without writing files",
+            "default": false
+          }
+        },
+        "required": ["codebasePath"]
+      }
+    },
+    {
+      "name": "suggest_recipes",
+      "description": "Suggests appropriate Radius recipes for detected dependencies based on environment and platform.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "Detected dependencies"
+          },
+          "environment": {
+            "type": "string",
+            "description": "Target environment: dev, staging, production",
+            "default": "dev"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Target platform: local, azure, aws",
+            "default": "local"
+          }
+        },
+        "required": ["dependencies"]
+      }
+    },
+    {
+      "name": "explain_discovery",
+      "description": "Generates natural language explanations of discovery results for user communication.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "Detected dependencies"
+          },
+          "services": {
+            "type": "array",
+            "description": "Detected services"
+          },
+          "appName": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string",
+            "description": "Output format: summary, detailed, markdown",
+            "default": "detailed"
+          }
+        },
+        "required": ["dependencies", "services"]
+      }
+    },
+    {
+      "name": "validate_bicep",
+      "description": "Validates generated Bicep content for syntax and structural issues.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Bicep content to validate"
+          }
+        },
+        "required": ["content"]
+      }
+    }
+  ],
+  "usage": {
+    "quickStart": [
+      "1. Connect to the MCP server: rad mcp serve",
+      "2. Use 'analyze_codebase' for full analysis",
+      "3. Or use 'generate_deployment' for end-to-end generation",
+      "4. Deploy with: rad deploy app.bicep"
+    ],
+    "commonWorkflows": {
+      "fullAnalysis": {
+        "description": "Complete codebase analysis with recommendations",
+        "tool": "analyze_codebase",
+        "example": {
+          "path": "./my-app",
+          "confidenceThreshold": 0.6
+        }
+      },
+      "generateAndDeploy": {
+        "description": "Generate deployment artifacts ready for rad deploy",
+        "tool": "generate_deployment",
+        "example": {
+          "codebasePath": "./my-app",
+          "appName": "my-app",
+          "containerImages": {
+            "api": "myregistry/api:v1",
+            "worker": "myregistry/worker:v1"
+          }
+        }
+      },
+      "explainResults": {
+        "description": "Get human-readable explanation of analysis",
+        "tool": "explain_discovery",
+        "prerequisite": "Run analyze_codebase first"
+      }
+    }
+  }
+}
